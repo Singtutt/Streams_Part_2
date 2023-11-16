@@ -3,15 +3,17 @@ package com.pluralsight.streams;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Program {
     public static void main(String[] args) {
         try (Scanner scan = new Scanner(System.in)) {
             List<Person> persons = personList();
-            List<Person> queryPerson = filterNames(scan, persons);
+            List<Person> queryPerson = filterNamesStream(scan, persons);
             displayPerson(scan, queryPerson);
-            ageInformation(scan, persons);
+            ageInformationStream(scan, persons);
         } catch (Exception e) {
             System.out.println("Error Occurred: " + e.getMessage());
         }
@@ -32,22 +34,6 @@ public class Program {
         return persons;
     }
 
-    public static List<Person> filterNames(Scanner scan, List<Person> persons) {
-        List<Person> queryPerson = new ArrayList<>();
-        System.out.println("Filter by Name:" +
-                "\nFirst Name: ");
-        String firstName = scan.nextLine();
-        System.out.println("\nLast Name: ");
-        String lastName = scan.nextLine();
-        for (Person person : persons) {
-            if ((firstName.isEmpty() || person.getFirstName().equalsIgnoreCase(firstName)) &&
-                    (lastName.isEmpty() || person.getLastName().equalsIgnoreCase(lastName))) {
-                queryPerson.add(person);
-            }
-        }
-        return queryPerson;
-    }
-
     public static void displayPerson(Scanner scan, List<Person> persons) {
         if (persons.isEmpty()) {
             System.out.println("Error in Search.");
@@ -58,25 +44,46 @@ public class Program {
             }
         }
     }
-    private static void ageInformation(Scanner scan, List<Person> persons) {
-        int initialAge = 0;
-        int oldAge = Integer.MIN_VALUE;
-        int youngAge = Integer.MAX_VALUE;
-        for (Person person : persons) {
-            int age = person.getAge();
-            initialAge += age;
-            if (age > oldAge) {
-                oldAge = age;
-            }
-            if (age < youngAge) {
-                youngAge = age;
-            }
-        }
-        double averageAge = (double) initialAge / persons.size();
-        System.out.println("Age Statistics:" +
-                "\n\tAverage Age: " + averageAge +
-                "\n\tOldest Age: " + oldAge +
-                "\n\tYoungest Age: " + youngAge);
+
+    public static List<Person> filterNamesStream(Scanner scan, List<Person> persons) {
+        List<Person> queryPerson = new ArrayList<>();
+        System.out.println("Filter by Name:" +
+                "\nFirst Name: ");
+        String firstName = scan.nextLine();
+        System.out.println("\nLast Name: ");
+        String lastName = scan.nextLine();
+        return persons.stream()
+                .filter(person -> (firstName.isEmpty() || person.getFirstName().equalsIgnoreCase(firstName)) &&
+                    (lastName.isEmpty() || person.getLastName().equalsIgnoreCase(lastName)))
+                .collect(Collectors.toList());
     }
 
+    private static void ageInformationStream(Scanner scan, List<Person> persons) {
+        double averageAge = persons.stream()
+                .mapToInt(Person::getAge)
+                .average()
+                .orElse(0.0);
+        int oldAge = persons.stream()
+                .mapToInt(Person::getAge)
+                .max()
+                .orElse(0);
+        int youngAge = persons.stream()
+                .mapToInt(Person::getAge)
+                .min()
+                .orElse(0);
+        System.out.println("\nAverage Age: " + averageAge +
+                "\nOldest Age: " + oldAge +
+                "\nYoungest Age: " + youngAge);
+    }
 }
+//  Testing out a different approach
+//    private static void oldAndYoungAge(List<Person> persons) {
+//        OptionalInt oldAge = persons.stream()
+//                .mapToInt(Person::getAge)
+//                .max();
+//        OptionalInt youngAge = persons.stream()
+//                .mapToInt(Person::getAge)
+//                .min();
+//        oldAge.ifPresent(age -> System.out.println("Age of Oldest: " + age));
+//        youngAge.ifPresent(age -> System.out.println("Age of Youngest: " + age));
+//    }
