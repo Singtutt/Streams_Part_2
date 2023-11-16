@@ -1,9 +1,6 @@
 package com.pluralsight.streams;
-
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.OptionalInt;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
